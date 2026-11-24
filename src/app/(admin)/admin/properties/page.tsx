@@ -17,6 +17,7 @@ import {
 } from "@/components/shared/app/States";
 import { Button } from "@/components/ui/Button";
 import { useListState } from "@/features/estate-core/hooks/useListState";
+import { useCurrentSite } from "@/features/sites/hooks/useSites";
 import { STATUS_LABELS } from "@/features/website/listing";
 import { NewListingSheet } from "@/features/website/components/NewListingSheet";
 import { useListings } from "@/features/website/hooks/useWebsite";
@@ -64,7 +65,28 @@ const Visibility = ({ live }: { live: boolean }) => (
   </span>
 );
 
+/** The landing page shows development cards, not listings; each estate's own website shows its listings. */
+function NotOnEstateSite() {
+  const { sites, select } = useCurrentSite();
+  const estates = sites.filter((s) => s.kind === "estate");
+  return (
+    <EmptyState title="Listings belong to an estate's website"
+      body={estates.length ? "The landing page shows development cards instead (see Developments). Pick an estate's website to manage its listings." : "No estate website has been set up yet."}
+      action={estates.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {estates.map((s) => <Button key={s.website_id} variant="outline" onClick={() => select(s.website_id)}>Switch to {s.name}</Button>)}
+        </div>
+      )} />
+  );
+}
+
 function ListingsScreen() {
+  const { site } = useCurrentSite();
+  if (site && site.kind !== "estate") return <NotOnEstateSite />;
+  return <ListingsList />;
+}
+
+function ListingsList() {
   const list = useListState(FILTER_KEYS);
   const show = list.filters.show;
   const query = useListings({
@@ -145,14 +167,7 @@ function ListingsScreen() {
               { header: "Enquiries", cell: (l) => l.enquiry_count },
               {
                 header: "Website",
-                cell: (l) => (
-                  <span className="flex items-center gap-2">
-                    <Visibility live={l.is_published} />
-                    {l.featured && (
-                      <span className="text-xs text-gold">Featured</span>
-                    )}
-                  </span>
-                ),
+                cell: (l) => <Visibility live={l.is_published} />,
               },
             ]}
             card={(l) => (

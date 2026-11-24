@@ -2,7 +2,6 @@
 export const websiteTips = {
   "website.listings": "The homes shown on your public website. Changes appear on the site within about a minute.",
   "website.publish": "Live listings appear on the website. Hidden ones are only visible here. A listing needs a photo and a short description before it can go live.",
-  "website.featured": "Featured listings are shown on the website's home page. Up to four appear there.",
   "website.photos": "The first photo is the cover shown on cards and at the top of the listing. Use the arrows to change the order. JPG, PNG or WebP, up to 10 MB each.",
   "website.price": "The starting price, in naira. The website shows it as “From ₦…”. Leave it blank to show “Price on request”.",
   "website.status": "Tells buyers where the development is: still being sold, being built (off-plan), ready to move in, or sold out.",
@@ -14,4 +13,8 @@ export const websiteTips = {
   "website.handled": "Tick an enquiry off once someone has dealt with it. It moves to “Handled” — you can always move it back.",
   "website.source": "Where the person came from before sending the enquiry, e.g. a Google ad or an Instagram link. Blank means they typed the address directly.",
   "website.notes": "Private notes for your team, e.g. “Called, viewing booked for Saturday”. The person who enquired never sees them.",
+  "developments.overview": "The development cards on the landing page. Use the arrows to set their order; changes appear on the site within about a minute.",
+  "developments.link": "Where the card's button goes, usually the estate's own website (https://…). Leave it empty if there's nowhere to send people yet.",
+  "developments.images": "The featured image is the card's main picture. Gallery photos appear when someone opens the development. JPG, PNG or WebP, up to 10 MB each.",
+  "developments.comingSoon": "Shows a “Coming soon” badge instead of a button, for developments that aren't open to enquiries yet.",
 } as const;

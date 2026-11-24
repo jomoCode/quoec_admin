@@ -9,6 +9,7 @@ import {
   Home,
   Inbox,
   KeyRound,
+  LayoutGrid,
   LayoutDashboard,
   LifeBuoy,
   Megaphone,
@@ -21,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Perm } from "@/features/auth/permissions";
+import type { SiteKind } from "@/features/sites/types";
 
 export type AdminNavItem = {
   label: string;
@@ -32,6 +34,8 @@ export type AdminNavItem = {
   primary?: boolean;
   /** Visual group in the sidebar. */
   group: "Estate" | "Money" | "Website" | "System";
+  /** Only for these kinds of website (the one picked in the sidebar). Empty/absent = any. */
+  siteKinds?: SiteKind[];
 };
 
 export const ADMIN_NAV: AdminNavItem[] = [
@@ -46,7 +50,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Payments", href: "/admin/payments", icon: CreditCard, anyOf: [Perm.PaymentsView], group: "Money" },
   { label: "Finance", href: "/admin/finance", icon: BarChart3, anyOf: [Perm.ReportsView], group: "Money" },
   { label: "Billing setup", href: "/admin/billing-setup", icon: Settings2, anyOf: [Perm.PaymentHeadsManage, Perm.BillsIssue, Perm.SettingsManage], group: "Money" },
-  { label: "Listings", href: "/admin/properties", icon: Store, anyOf: [Perm.CmsManage], group: "Website" },
+  { label: "Developments", href: "/admin/developments", icon: LayoutGrid, anyOf: [Perm.CmsManage], group: "Website", siteKinds: ["landing"] },
+  { label: "Listings", href: "/admin/properties", icon: Store, anyOf: [Perm.CmsManage], group: "Website", siteKinds: ["estate"] },
   { label: "Enquiries", href: "/admin/enquiries", icon: Inbox, anyOf: [Perm.LeadsView], group: "Website" },
   { label: "Journal", href: "/admin/journal", icon: FileText, anyOf: [Perm.CmsManage], group: "Website" },
   { label: "Site content", href: "/admin/site", icon: Globe, anyOf: [Perm.CmsManage], group: "Website" },
@@ -56,8 +61,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "User manual", href: "/admin/manual", icon: BookOpen, anyOf: [], group: "System" },
 ];
 
-export function visibleNav(can: (p: string) => boolean): AdminNavItem[] {
-  return ADMIN_NAV.filter((item) => item.anyOf.length === 0 || item.anyOf.some(can));
+/** `siteKind` = kind of the website picked in the sidebar (undefined while loading: site-specific items wait). */
+export function visibleNav(can: (p: string) => boolean, siteKind?: SiteKind): AdminNavItem[] {
+  return ADMIN_NAV.filter(
+    (item) => (item.anyOf.length === 0 || item.anyOf.some(can)) && (!item.siteKinds?.length || (siteKind !== undefined && item.siteKinds.includes(siteKind))),
+  );
 }
 
 export function isActive(pathname: string, href: string): boolean {

@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BrandLogo } from "@/components/shared/BrandMark";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { SiteSwitcher } from "@/features/sites/components/SiteSwitcher";
+import { useCurrentSite } from "@/features/sites/hooks/useSites";
 import { NotificationBell } from "@/features/support/components/NotificationBell";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/providers/AuthProvider";
@@ -20,6 +22,7 @@ function NavLinks({ items, pathname, onNavigate }: { items: AdminNavItem[]; path
         <div key={group}>
           {i > 0 && <div className="glass-divider my-4" aria-hidden />}
           <p className="text-eyebrow mb-2 px-3 !text-[0.7rem] font-semibold text-muted-foreground">{group}</p>
+          {group === "Website" && <SiteSwitcher onSwitch={onNavigate} />}
           <NavGroup items={items.filter((i) => i.group === group)} pathname={pathname} onNavigate={onNavigate} />
         </div>
       ))}
@@ -66,7 +69,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { can } = useAuth();
   const [drawer, setDrawer] = useState(false);
-  const items = visibleNav(can);
+  const items = visibleNav(can, useCurrentSite().site?.kind);
   const primary = items.filter((i) => i.primary);
 
   return (

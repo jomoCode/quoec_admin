@@ -1,6 +1,7 @@
 "use client";
 
 import { FormField, inputClass } from "@/components/shared/form/FormField";
+import { siteOrigin, useCurrentSite } from "@/features/sites/hooks/useSites";
 import { websiteUrl } from "@/lib/config/site";
 import { getTooltip } from "@/lib/tooltips/registry";
 import { cn } from "@/lib/utils/cn";
@@ -14,7 +15,7 @@ function Counter({ value, ideal }: { value: string; ideal: number }) {
 
 /** Roughly how the page will look in Google results, so non-technical staff can see the effect of what they type. */
 export function SearchPreview({ title, description, path }: { title: string; description: string; path: string }) {
-  const host = websiteUrl.replace(/^https?:\/\//, "");
+  const host = (siteOrigin(useCurrentSite().site) ?? websiteUrl).replace(/^https?:\/\//, "");
   const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
   return (
     <figure aria-label="Google preview" className="rounded-lg border border-border bg-background p-4 font-sans">

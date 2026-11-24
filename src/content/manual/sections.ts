@@ -222,7 +222,7 @@ export const manualSections: ManualSection[] = [
       "Open Listings → “New listing”. Enter the name, home type, location, starting price and bedrooms, then choose “Create listing”.",
       "On the next screen, add photos with “Add photos” (you can pick several at once). The first photo is the cover — use the arrows to reorder.",
       "Write a short description (shown on cards and in Google) and, if you like, a full description and a list of features. Choose “Save changes”.",
-      "Turn on “Live on the website” to publish it. Turn on “Feature on the home page” to show it in the home page's featured section (up to four appear).",
+      "Turn on “Live on the website” to publish it.",
     ],
     tips: [
       "New listings start hidden, so you can prepare them in private. A listing needs at least one photo and a short description before it can go live.",

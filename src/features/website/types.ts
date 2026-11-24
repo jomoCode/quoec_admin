@@ -64,6 +64,8 @@ export type Enquiry = {
   handled_at: string | null;
   handled_by_name: string | null;
   created_at: string;
+  /** Which website the enquiry came from. */
+  website_id: string | null;
 };
 
 export type EnquiryNote = { id: string; body: string; author_name: string | null; created_at: string };

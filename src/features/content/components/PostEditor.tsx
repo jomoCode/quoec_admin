@@ -1,7 +1,6 @@
 "use client";
 
 import { ExternalLink, ImagePlus } from "lucide-react";
-import { websiteLink } from "@/lib/config/site";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { FormField, inputClass } from "@/components/shared/form/FormField";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { InfoTip } from "@/components/ui/InfoTip";
 import type { BlogBlock } from "@/features/content/blocks";
+import { useSiteLink, useWebsiteId } from "@/features/sites/hooks/useSites";
 import { getTooltip } from "@/lib/tooltips/registry";
 import { journalApi } from "../api/ContentApi";
 import { useCategories, usePostActions } from "../hooks/useContent";
@@ -39,13 +39,14 @@ function PublishPanel({ post, saveFirst }: { post: Post; saveFirst: () => Promis
   const [confirm, setConfirm] = useState<"unpublish" | "archive" | null>(null);
   const busy = actions.publish.isPending || actions.save.isPending;
   const go = async (at: string | null) => { await saveFirst(); actions.publish.mutate(at ? new Date(at).toISOString() : null); };
+  const liveUrl = useSiteLink()(`/blog/${post.slug}`);
   return (
     <section className="space-y-4 rounded-lg border border-border bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm"><span className="text-muted-foreground">Status:</span> <strong>{POST_STATUS_LABELS[post.status]}</strong>
           {post.status === "scheduled" && post.published_at && <span className="block text-xs text-muted-foreground">Goes live {new Date(post.published_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>}
         </p>
-        {post.is_live && <a href={websiteLink(`/blog/${post.slug}`)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm hover:text-gold"><ExternalLink className="size-4" /> View</a>}
+        {post.is_live && liveUrl && <a href={liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm hover:text-gold"><ExternalLink className="size-4" /> View</a>}
       </div>
       <Button className="w-full" disabled={busy} onClick={() => go(null)}>{post.is_live ? "Save & update live article" : "Publish now"}</Button>
       {!post.is_live && (
@@ -92,7 +93,8 @@ export function PostEditor({ post }: { post: Post }) {
   const { save } = usePostActions(post.id);
   const set = (patch: Partial<Draft>) => setD((cur) => ({ ...cur, ...patch }));
   const saveNow = () => save.mutateAsync(toPostInput(d));
-  const upload = async (file: File) => (await journalApi.addImage(post.id, file)).url;
+  const site = useWebsiteId()!;
+  const upload = async (file: File) => (await journalApi.addImage(site, post.id, file)).url;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">

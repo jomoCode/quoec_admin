@@ -26,7 +26,7 @@ const enquiry = (over: Partial<EnquiryDetail> = {}): EnquiryDetail => ({
   id: "e1", reference: "ENQ-20261108-ABCD", enquiry_type: "viewing", name: "Bola Ade", email: "bola@example.com", phone: "0803 123 4567",
   property_id: "p1", property_name: "Palm Crest", property_slug: "palm-crest", message: "Can I view the 5-bed on Saturday?", source_page: "/properties/palm-crest",
   source: "Google ad · ajah", attribution: {}, handled: false, handled_at: null, handled_by_name: null, created_at: "2026-11-08T09:00:00Z",
-  notes: [], other_enquiries: [], ...over,
+  website_id: "citadel", notes: [], other_enquiries: [], ...over,
 });
 
 async function openPage(ui: React.ReactElement, auth: FakeAuthService) {
@@ -91,7 +91,8 @@ describe("Listings", () => {
     const jpg = (name: string) => new File([new Uint8Array([0xff, 0xd8, 0xff])], name, { type: "image/jpeg" });
     await user.upload(screen.getByLabelText("Upload photos"), [jpg("a.jpg"), jpg("b.jpg"), new File(["x"], "plan.pdf", { type: "application/pdf" })]);
     expect(await screen.findByText(/Skipped plan.pdf/)).toBeInTheDocument();
-    expect(await screen.findAllByRole("button", { name: /^Remove photo/ })).toHaveLength(2);
+    // Photos upload one after another; wait for both rather than the first to appear.
+    await vi.waitFor(() => expect(screen.getAllByRole("button", { name: /^Remove photo/ })).toHaveLength(2));
     expect(screen.getByText("Cover")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Move photo 2 earlier" }));
@@ -100,7 +101,7 @@ describe("Listings", () => {
     await vi.waitFor(() => expect(screen.getByRole("switch", { name: "Live on the website" })).toBeEnabled());
     await user.click(screen.getByRole("switch", { name: "Live on the website" }));
     await vi.waitFor(() => expect(published).toBe(true));
-    expect(await screen.findByRole("link", { name: /view on website/i })).toHaveAttribute("href", "http://localhost:3000/properties/palm-crest");
+    expect(await screen.findByRole("link", { name: /view on website/i })).toHaveAttribute("href", "https://thecitadel.ng/properties/palm-crest"); // the picked website's own domain
   });
 });
 

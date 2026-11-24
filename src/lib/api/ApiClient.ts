@@ -55,14 +55,18 @@ export class ApiClient {
   }
 
   /** Multipart file upload (photos, PDFs). The browser sets the multipart boundary itself. */
-  async upload<T>(path: string, file: File, fields: Record<string, string> = {}): Promise<T> {
+  async upload<T>(path: string, file: File, fields: Record<string, string> = {}, options: Pick<RequestOptions, "headers"> = {}): Promise<T> {
     const form = new FormData();
     form.append("file", file);
     Object.entries(fields).forEach(([k, v]) => form.append(k, v));
     const token = this.tokenProvider();
     let response: Response;
     try {
-      response = await fetch(`${this.baseUrl}${path}`, { method: "POST", body: form, headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      response = await fetch(`${this.baseUrl}${path}`, {
+        method: "POST",
+        body: form,
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
+      });
     } catch {
       throw new ApiError("We couldn't reach the server. Check your connection and try again.", 0, "network_error");
     }

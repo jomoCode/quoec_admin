@@ -3,35 +3,49 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMutationWithToast } from "@/features/estate-core/hooks/useMutationWithToast";
 import type { PageQuery } from "@/features/estate-core/types";
-import { enquiriesApi, listingsApi } from "../api/WebsiteApi";
-import type { HandledFilter, ListingInput } from "../types";
+import { useWebsiteId } from "@/features/sites/hooks/useSites";
+import { enquiriesApi, listingsApi, type EnquiryQuery } from "../api/WebsiteApi";
+import type { ListingInput } from "../types";
 
 const LISTINGS = [["listings"]] as const;
 const ENQUIRIES = [["enquiries"], ["notifications"]] as const;
 
-// ── Listings ──────────────────────────────────────────────────────────────
-export const useListings = (q: PageQuery & { published?: boolean }) =>
-  useQuery({ queryKey: ["listings", "list", q], queryFn: () => listingsApi.list(q), placeholderData: keepPreviousData });
-export const useListing = (id: string) => useQuery({ queryKey: ["listings", "detail", id], queryFn: () => listingsApi.get(id) });
+// ── Listings (keys: ["listings", website_id, …]) ─────────────────────────
+export function useListings(q: PageQuery & { published?: boolean }) {
+  const site = useWebsiteId();
+  return useQuery({ queryKey: ["listings", site, "list", q], queryFn: () => listingsApi.list(site!, q), enabled: !!site, placeholderData: keepPreviousData });
+}
+export function useListing(id: string) {
+  const site = useWebsiteId();
+  return useQuery({ queryKey: ["listings", site, "detail", id], queryFn: () => listingsApi.get(site!, id), enabled: !!site });
+}
 
 export function useListingActions(id?: string) {
+  const site = useWebsiteId()!;
   return {
-    create: useMutationWithToast({ mutationFn: (body: ListingInput) => listingsApi.create(body), success: (l) => `${l.name} created — add photos next`, invalidate: LISTINGS }),
+    create: useMutationWithToast({ mutationFn: (body: ListingInput) => listingsApi.create(site, body), success: (l) => `${l.name} created — add photos next`, invalidate: LISTINGS }),
     update: useMutationWithToast({
-      mutationFn: (body: ListingInput) => listingsApi.update(id!, body),
+      mutationFn: (body: ListingInput) => listingsApi.update(site, id!, body),
       success: (l, body) => ("is_published" in body ? (l.is_published ? "Listing is live on the website" : "Listing hidden from the website") : "Listing saved"),
       invalidate: LISTINGS,
     }),
-    addPhoto: useMutationWithToast({ mutationFn: (file: File) => listingsApi.addPhoto(id!, file), success: "Photo added", invalidate: LISTINGS }),
-    removePhoto: useMutationWithToast({ mutationFn: (photoId: string) => listingsApi.removePhoto(id!, photoId), success: "Photo removed", invalidate: LISTINGS }),
-    reorder: useMutationWithToast({ mutationFn: (ids: string[]) => listingsApi.reorderPhotos(id!, ids), success: "Photo order saved", invalidate: LISTINGS }),
+    remove: useMutationWithToast({
+      mutationFn: () => listingsApi.remove(site, id!),
+      success: "Listing deleted",
+      // Only the list: refetching the deleted listing's own page would flash "not found" before we leave it.
+      invalidate: [["listings", site, "list"], ...ENQUIRIES],
+    }),
+    addPhoto: useMutationWithToast({ mutationFn: (file: File) => listingsApi.addPhoto(site, id!, file), success: "Photo added", invalidate: LISTINGS }),
+    removePhoto: useMutationWithToast({ mutationFn: (photoId: string) => listingsApi.removePhoto(site, id!, photoId), success: "Photo removed", invalidate: LISTINGS }),
+    reorder: useMutationWithToast({ mutationFn: (ids: string[]) => listingsApi.reorderPhotos(site, id!, ids), success: "Photo order saved", invalidate: LISTINGS }),
   };
 }
 
-// ── Enquiries ─────────────────────────────────────────────────────────────
-export const useEnquiries = (q: PageQuery & { handled?: HandledFilter; enquiry_type?: string; property_id?: string }) =>
-  useQuery({ queryKey: ["enquiries", "list", q], queryFn: () => enquiriesApi.list(q), placeholderData: keepPreviousData, refetchInterval: 60_000 });
-export const useEnquiryCounts = () => useQuery({ queryKey: ["enquiries", "counts"], queryFn: enquiriesApi.counts, refetchInterval: 60_000 });
+// ── Enquiries (`site` null = every website) ──────────────────────────────
+export const useEnquiries = (site: string | null, q: EnquiryQuery) =>
+  useQuery({ queryKey: ["enquiries", "list", site, q], queryFn: () => enquiriesApi.list(site, q), placeholderData: keepPreviousData, refetchInterval: 60_000 });
+export const useEnquiryCounts = (site: string | null = null) =>
+  useQuery({ queryKey: ["enquiries", "counts", site], queryFn: () => enquiriesApi.counts(site), refetchInterval: 60_000 });
 export const useEnquiry = (id: string) => useQuery({ queryKey: ["enquiries", "detail", id], queryFn: () => enquiriesApi.get(id) });
 
 export function useEnquiryActions(id: string) {
